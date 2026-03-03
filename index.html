@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>COMPA SHOP</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Écran de connexion -->
+<div id="authContainer" class="auth-container">
+    <h2 id="authTitle">Connexion</h2>
+
+    <input type="text" id="authUsername" placeholder="Nom d'utilisateur">
+    <input type="password" id="authPassword" placeholder="Mot de passe">
+
+    <button onclick="handleAuth()" id="authButton">Se connecter</button>
+
+    <p id="switchAuth" onclick="toggleAuthMode()">Créer un compte</p>
+    <p id="authMessage"></p>
+</div>
+
+<!-- Contenu principal (caché au départ) -->
+<div id="mainSite" style="display:none;">
+
+<header>
+    <h1>COMPA SHOP</h1>
+    <button onclick="logout()">Se déconnecter</button>
+    <nav>
+        <button onclick="filterCategory('all')">Tous</button>
+        <button onclick="filterCategory('boucherie')">Boucherie</button>
+        <button onclick="filterCategory('epicerie')">Épicerie</button>
+        <button onclick="filterCategory('entretien')">Entretien</button>
+        <button onclick="filterCategory('boisson')">Boissons</button>
+        <button onclick="filterCategory('fruit')">Fruits & Légumes</button>
+        <button onclick="showCart()">
+    Panier <span id="cartCount" class="cart-badge">0</span>
+</button>
+    </nav>
+</header>
+
+<section class="products">
+    <h2>Produits</h2>
+    <div id="productList"></div>
+</section>
+
+<section class="cart">
+    <h2>Panier</h2>
+    <div id="cartItems"></div>
+    <p>Total : <span id="totalPrice">0</span> €</p>
+    <button onclick="checkout()">Payer</button>
+</section>
+
+</div>
+
+<script src="script.js"></script>
+<div id="paymentModal" class="modal">
+    <div class="modal-content">
+        <h3>Paiement sécurisé</h3>
+        <input type="text" id="cardName" placeholder="Nom sur la carte">
+        <input type="text" id="cardNumber" placeholder="Numéro de carte">
+        <input type="text" id="cardExpiry" placeholder="MM/AA">
+        <input type="text" id="cardCVC" placeholder="CVC">
+        <button onclick="processPayment()">Payer</button>
+    </div>
+</div>
+</body>
+</html>
