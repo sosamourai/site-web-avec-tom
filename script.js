@@ -219,3 +219,92 @@ function showCart() {
     document.querySelector(".cart").style.display = "block";
     window.scrollTo(0, document.body.scrollHeight);
 }
+
+#Bouton comparaison
+
+// Mise à jour visuelle du panier
+function updateCart() {
+    const cartItems = document.getElementById("cartItems");
+    const cartCount = document.getElementById("cartCount");
+    const cartTotalItems = document.getElementById("cartTotalItems");
+
+    cartItems.innerHTML = "";
+
+    cart.forEach((item, index) => {
+        cartItems.innerHTML += `
+            <div class="cart-item">
+                ${item.name} 
+                <button onclick="removeFromCart(${index})" style="background: red; padding: 2px 6px; float: right;">X</button>
+            </div>
+        `;
+    });
+
+    cartCount.textContent = cart.length;
+    if(cartTotalItems) cartTotalItems.textContent = cart.length;
+}
+
+// Fonction pour envoyer les données au serveur
+function compareCart() {
+    if (cartIndices.length === 0) {
+        alert("Votre liste de courses est vide !");
+        return;
+    }
+
+    // Appel à ton API locale Node.js
+    fetch('http://localhost:3000/compare-prices', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ productIndices: cartIndices })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+        showComparisonResult(data);
+    })
+    .catch(error => {
+        console.error('Erreur de connexion au serveur:', error);
+        alert("Impossible de joindre le serveur. Pensez à lancer server.js !");
+    });
+}
+
+// Affichage de la modale avec les résultats
+function showComparisonResult(data) {
+    const modal = document.getElementById("comparisonModal");
+    const resultsText = document.getElementById("comparisonResultsText");
+    
+    let html = `
+        <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; border-left: 5px solid #4caf50; margin-bottom: 20px;">
+            <p style="font-size: 18px; margin: 0;">🏆 <strong>${data.bestStore}</strong></p>
+            <p style="font-size: 24px; font-weight: bold; color: #2e7d32; margin: 5px 0 0 0;">${data.total} €</p>
+        </div>
+        <h4 style="margin-bottom: 10px;">Détails par enseigne :</h4>
+        <ul style="list-style-type: none; padding: 0;">
+    `;
+    
+    // Trier les magasins du moins cher au plus cher
+    const sortedStores = Object.entries(data.allTotals).sort((a, b) => a[1] - b[1]);
+
+    sortedStores.forEach(([store, price]) => {
+        const isBest = store === data.bestStore;
+        html += `
+            <li style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; ${isBest ? 'font-weight: bold; color: green;' : ''}">
+                <span>${store}</span>
+                <span>${price.toFixed(2)} €</span>
+            </li>
+        `;
+    });
+    
+    html += `</ul>`;
+    
+    resultsText.innerHTML = html;
+    modal.style.display = "flex";
+}
+
+function closeComparisonModal() {
+    document.getElementById("comparisonModal").style.display = "none";
+}
