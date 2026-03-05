@@ -1,5 +1,6 @@
 let isLoginMode = true;
 let cart = [];
+let cartIndices = []; // Stocke les index des produits pour le calcul serveur
 
 window.onload = function () {
     const loggedUser = localStorage.getItem("loggedUser");
@@ -8,18 +9,13 @@ window.onload = function () {
     }
 };
 
+// ================= AUTHENTIFICATION =================
+
 function toggleAuthMode() {
     isLoginMode = !isLoginMode;
-
-    document.getElementById("authTitle").textContent =
-        isLoginMode ? "Connexion" : "Créer un compte";
-
-    document.getElementById("authButton").textContent =
-        isLoginMode ? "Se connecter" : "Créer un compte";
-
-    document.getElementById("switchAuth").textContent =
-        isLoginMode ? "Créer un compte" : "Déjà un compte ? Se connecter";
-
+    document.getElementById("authTitle").textContent = isLoginMode ? "Connexion" : "Créer un compte";
+    document.getElementById("authButton").textContent = isLoginMode ? "Se connecter" : "Créer un compte";
+    document.getElementById("switchAuth").textContent = isLoginMode ? "Créer un compte" : "Déjà un compte ? Se connecter";
     document.getElementById("authMessage").textContent = "";
 }
 
@@ -35,12 +31,7 @@ function handleAuth() {
 
     if (isLoginMode) {
         const storedUser = JSON.parse(localStorage.getItem("user"));
-
-        if (
-            storedUser &&
-            storedUser.username === username &&
-            storedUser.password === password
-        ) {
+        if (storedUser && storedUser.username === username && storedUser.password === password) {
             localStorage.setItem("loggedUser", username);
             showMainSite();
         } else {
@@ -65,10 +56,10 @@ function logout() {
     location.reload();
 }
 
-
+// ================= DONNÉES PRODUITS =================
 
 const products = [
-
+    
     // BOUCHERIE
     { name: "Steak haché 5% MG 500g", category: "boucherie", prices: { Carrefour: 6.20, Leclerc: 5.89, Auchan: 6.45, Intermarché: 6.05 }},
     { name: "Escalope de poulet 1kg", category: "boucherie", prices: { Carrefour: 9.80, Leclerc: 9.20, Auchan: 9.95, Intermarché: 9.50 }},
@@ -138,7 +129,8 @@ const products = [
     { name: "Avocats x2", category: "fruit", prices: { Carrefour: 2.80, Leclerc: 2.55, Auchan: 2.95, Intermarché: 2.70 }}
 ];
 
-// ================= AFFICHAGE =================
+
+// ================= AFFICHAGE PRODUITS =================
 
 function filterCategory(category) {
     displayProducts(category);
@@ -150,23 +142,19 @@ function displayProducts(filteredCategory = "all") {
 
     products.forEach((product, index) => {
         if (filteredCategory === "all" || product.category === filteredCategory) {
-
             const div = document.createElement("div");
             div.className = "product";
 
             const minPrice = Math.min(...Object.values(product.prices));
-
             let priceOptions = "";
 
             for (let store in product.prices) {
                 const price = product.prices[store];
                 const isCheapest = price === minPrice;
-
                 priceOptions += `
                     <label style="color:${isCheapest ? 'green' : 'black'}">
                         <input type="radio" name="store-${index}" value="${store}">
-                        ${store} - ${price} €
-                        ${isCheapest ? " (Meilleur prix)" : ""}
+                        ${store} - ${price} € ${isCheapest ? "✔" : ""}
                     </label><br>
                 `;
             }
@@ -174,24 +162,19 @@ function displayProducts(filteredCategory = "all") {
             div.innerHTML = `
                 <strong>${product.name}</strong><br>
                 ${priceOptions}
-                <button onclick="addToCart(${index})">Ajouter</button>
-                <button onclick="addCheapest(${index})">Moins cher</button>
+                <button onclick="addToCart(${index})">Ajouter au panier</button>
             `;
-
             productList.appendChild(div);
         }
     });
 }
 
-// ================= PANIER =================
+// ================= GESTION PANIER =================
 
 function addToCart(index) {
-    const selectedStore = document.querySelector(
-        `input[name="store-${index}"]:checked`
-    );
-
+    const selectedStore = document.querySelector(`input[name="store-${index}"]:checked`);
     if (!selectedStore) {
-        alert("Veuillez sélectionner un magasin.");
+        alert("Veuillez sélectionner un magasin pour ce produit.");
         return;
     }
 
@@ -200,68 +183,16 @@ function addToCart(index) {
     const price = product.prices[store];
 
     cart.push({ name: product.name, store, price });
-    updateCart();
-}
-
-function addCheapest(index) {
-    const product = products[index];
-
-    const cheapestStore = Object.keys(product.prices).reduce((a, b) =>
-        product.prices[a] < product.prices[b] ? a : b
-    );
-
-    cart.push({
-        name: product.name,
-        store: cheapestStore,
-        price: product.prices[cheapestStore]
-    });
-
+    cartIndices.push(index); // On garde l'index pour la comparaison serveur
     updateCart();
 }
 
 function removeFromCart(index) {
     cart.splice(index, 1);
+    cartIndices.splice(index, 1);
     updateCart();
 }
 
-function updateCart() {
-    const cartItems = document.getElementById("cartItems");
-    const totalPrice = document.getElementById("totalPrice");
-    cartItems.innerHTML = "";
-
-    let total = 0;
-
-    cart.forEach((item, index) => {
-        total += item.price;
-
-        cartItems.innerHTML += `
-            <div>
-                ${item.name} (${item.store}) - ${item.price} €
-                <button onclick="removeFromCart(${index})">Supprimer</button>
-            </div>
-        `;
-    });
-
-    totalPrice.textContent = total.toFixed(2);
-}
-
-function checkout() {
-    if (cart.length === 0) {
-        alert("Votre panier est vide.");
-        return;
-    }
-
-    alert("Paiement effectué avec succès !");
-    cart = [];
-    updateCart();
-}
-// Afficher le panier
-function showCart() {
-    document.querySelector(".cart").style.display = "block";
-    window.scrollTo(0, document.body.scrollHeight);
-}
-
-// Mettre à jour le compteur panier
 function updateCart() {
     const cartItems = document.getElementById("cartItems");
     const totalPrice = document.getElementById("totalPrice");
@@ -272,7 +203,6 @@ function updateCart() {
 
     cart.forEach((item, index) => {
         total += item.price;
-
         cartItems.innerHTML += `
             <div class="cart-item">
                 ${item.name} (${item.store}) - ${item.price} €
@@ -285,31 +215,7 @@ function updateCart() {
     cartCount.textContent = cart.length;
 }
 
-// Ouvrir modal paiement
-function checkout() {
-    if (cart.length === 0) {
-        alert("Votre panier est vide.");
-        return;
-    }
-
-    document.getElementById("paymentModal").style.display = "flex";
-}
-
-// Simuler paiement
-function processPayment() {
-    const name = document.getElementById("cardName").value;
-    const number = document.getElementById("cardNumber").value;
-    const expiry = document.getElementById("cardExpiry").value;
-    const cvc = document.getElementById("cardCVC").value;
-
-    if (!name || !number || !expiry || !cvc) {
-        alert("Veuillez remplir toutes les informations.");
-        return;
-    }
-
-    document.getElementById("paymentModal").style.display = "none";
-    alert("Paiement validé avec succès !");
-
-    cart = [];
-    updateCart();
+function showCart() {
+    document.querySelector(".cart").style.display = "block";
+    window.scrollTo(0, document.body.scrollHeight);
 }
