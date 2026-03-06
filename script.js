@@ -1,6 +1,6 @@
+
 let isLoginMode = true;
 let cart = [];
-let cartIndices = []; // Stocke les index des produits pour le calcul serveur
 
 window.onload = function () {
     const loggedUser = localStorage.getItem("loggedUser");
@@ -9,12 +9,10 @@ window.onload = function () {
     }
 };
 
-// ================= AUTHENTIFICATION =================
-
 function toggleAuthMode() {
     isLoginMode = !isLoginMode;
     document.getElementById("authTitle").textContent = isLoginMode ? "Connexion" : "Créer un compte";
-    document.getElementById("authButton").textContent = isLoginMode ? "Se connecter" : "Créer un compte";
+    document.getElementById("authButton").textContent = isLoginMode ? "Se connecter" : "S'inscrire";
     document.getElementById("switchAuth").textContent = isLoginMode ? "Créer un compte" : "Déjà un compte ? Se connecter";
     document.getElementById("authMessage").textContent = "";
 }
@@ -40,7 +38,7 @@ function handleAuth() {
     } else {
         const user = { username, password };
         localStorage.setItem("user", JSON.stringify(user));
-        message.textContent = "Compte créé avec succès.";
+        message.textContent = "Compte créé avec succès !";
         toggleAuthMode();
     }
 }
@@ -48,7 +46,7 @@ function handleAuth() {
 function showMainSite() {
     document.getElementById("authContainer").style.display = "none";
     document.getElementById("mainSite").style.display = "block";
-    displayProducts();
+    displayProducts("all");
 }
 
 function logout() {
@@ -56,81 +54,56 @@ function logout() {
     location.reload();
 }
 
-// ================= DONNÉES PRODUITS =================
+
+// 2. BASE DE DONNÉES De la liste 
 
 const products = [
-    
     // BOUCHERIE
-    { name: "Steak haché 5% MG 500g", category: "boucherie", prices: { Carrefour: 6.20, Leclerc: 5.89, Auchan: 6.45, Intermarché: 6.05 }},
-    { name: "Escalope de poulet 1kg", category: "boucherie", prices: { Carrefour: 9.80, Leclerc: 9.20, Auchan: 9.95, Intermarché: 9.50 }},
-    { name: "Cordon bleu x4", category: "boucherie", prices: { Carrefour: 4.90, Leclerc: 4.65, Auchan: 5.10, Intermarché: 4.80 }},
-    { name: "Saucisses de Toulouse 1kg", category: "boucherie", prices: { Carrefour: 7.80, Leclerc: 7.40, Auchan: 8.10, Intermarché: 7.65 }},
-    { name: "Bœuf bourguignon 1kg", category: "boucherie", prices: { Carrefour: 12.90, Leclerc: 12.40, Auchan: 13.20, Intermarché: 12.70 }},
-    { name: "Lardons fumés 200g", category: "boucherie", prices: { Carrefour: 2.30, Leclerc: 2.10, Auchan: 2.45, Intermarché: 2.20 }},
-    { name: "Filet de dinde 600g", category: "boucherie", prices: { Carrefour: 7.90, Leclerc: 7.50, Auchan: 8.10, Intermarché: 7.70 }},
-    { name: "Chipolatas x6", category: "boucherie", prices: { Carrefour: 4.20, Leclerc: 3.95, Auchan: 4.35, Intermarché: 4.05 }},
-    { name: "Côtelettes d'agneau 800g", category: "boucherie", prices: { Carrefour: 15.90, Leclerc: 15.20, Auchan: 16.30, Intermarché: 15.60 }},
+    { name: "Steak haché 5% MG 500g", category: "boucherie", prices: { Carrefour: 5.50, Leclerc: 5.89, Auchan: 6.10, Intermarché: 5.75 }},
+    { name: "Escalope de poulet 1kg", category: "boucherie", prices: { Carrefour: 8.90, Leclerc: 9.20, Auchan: 9.95, Intermarché: 9.10 }},
+    { name: "Cordon bleu x4", category: "boucherie", prices: { Carrefour: 4.90, Leclerc: 4.65, Auchan: 5.10, Intermarché: 4.50 }},
+    { name: "Saucisses de Toulouse 1kg", category: "boucherie", prices: { Carrefour: 7.20, Leclerc: 7.40, Auchan: 7.10, Intermarché: 7.65 }},
+    { name: "Bœuf bourguignon 1kg", category: "boucherie", prices: { Carrefour: 12.90, Leclerc: 13.10, Auchan: 13.20, Intermarché: 12.40 }},
+    { name: "Lardons fumés 200g", category: "boucherie", prices: { Carrefour: 2.10, Leclerc: 2.15, Auchan: 2.45, Intermarché: 2.05 }},
+    { name: "Filet de dinde 600g", category: "boucherie", prices: { Carrefour: 7.30, Leclerc: 7.50, Auchan: 7.80, Intermarché: 7.15 }},
+    { name: "Chipolatas x6", category: "boucherie", prices: { Carrefour: 3.90, Leclerc: 4.10, Auchan: 4.35, Intermarché: 3.95 }},
+    { name: "Côtelettes d'agneau 800g", category: "boucherie", prices: { Carrefour: 15.90, Leclerc: 16.50, Auchan: 14.80, Intermarché: 15.60 }},
     { name: "Blanc de poulet tranché 160g", category: "boucherie", prices: { Carrefour: 3.10, Leclerc: 2.90, Auchan: 3.25, Intermarché: 3.00 }},
-    { name: "Jambon supérieur x4", category: "boucherie", prices: { Carrefour: 2.95, Leclerc: 2.75, Auchan: 3.10, Intermarché: 2.85 }},
+    { name: "Jambon supérieur x4", category: "boucherie", prices: { Carrefour: 2.70, Leclerc: 2.75, Auchan: 3.10, Intermarché: 2.85 }},
 
     // EPICERIE
-    { name: "Pâtes Spaghetti 1kg", category: "epicerie", prices: { Carrefour: 1.75, Leclerc: 1.60, Auchan: 1.85, Intermarché: 1.68 }},
+    { name: "Pâtes Spaghetti 1kg", category: "epicerie", prices: { Carrefour: 1.75, Leclerc: 1.60, Auchan: 1.55, Intermarché: 1.68 }},
     { name: "Riz Basmati 1kg", category: "epicerie", prices: { Carrefour: 3.40, Leclerc: 3.15, Auchan: 3.55, Intermarché: 3.28 }},
-    { name: "Nutella 750g", category: "epicerie", prices: { Carrefour: 5.10, Leclerc: 4.95, Auchan: 5.25, Intermarché: 5.05 }},
-    { name: "Farine T45 1kg", category: "epicerie", prices: { Carrefour: 1.25, Leclerc: 1.15, Auchan: 1.30, Intermarché: 1.20 }},
+    { name: "Nutella 750g", category: "epicerie", prices: { Carrefour: 5.10, Leclerc: 5.20, Auchan: 4.90, Intermarché: 5.05 }},
+    { name: "Farine T45 1kg", category: "epicerie", prices: { Carrefour: 1.25, Leclerc: 1.15, Auchan: 1.30, Intermarché: 1.10 }},
     { name: "Huile d'olive 1L", category: "epicerie", prices: { Carrefour: 8.50, Leclerc: 8.10, Auchan: 8.90, Intermarché: 8.40 }},
-    { name: "Thon en boîte x3", category: "epicerie", prices: { Carrefour: 4.60, Leclerc: 4.35, Auchan: 4.80, Intermarché: 4.50 }},
+    { name: "Thon en boîte x3", category: "epicerie", prices: { Carrefour: 4.30, Leclerc: 4.35, Auchan: 4.10, Intermarché: 4.50 }},
     { name: "Céréales 500g", category: "epicerie", prices: { Carrefour: 3.90, Leclerc: 3.65, Auchan: 4.10, Intermarché: 3.80 }},
-    { name: "Sucre 1kg", category: "epicerie", prices: { Carrefour: 1.60, Leclerc: 1.45, Auchan: 1.70, Intermarché: 1.55 }},
-    { name: "Biscuits Prince x12", category: "epicerie", prices: { Carrefour: 2.40, Leclerc: 2.20, Auchan: 2.55, Intermarché: 2.35 }},
-    { name: "Chocolat noir 200g", category: "epicerie", prices: { Carrefour: 3.60, Leclerc: 3.30, Auchan: 3.75, Intermarché: 3.50 }},
-    { name: "Café moulu 250g", category: "epicerie", prices: { Carrefour: 4.80, Leclerc: 4.50, Auchan: 5.00, Intermarché: 4.70 }},
+    { name: "Sucre 1kg", category: "epicerie", prices: { Carrefour: 1.40, Leclerc: 1.45, Auchan: 1.70, Intermarché: 1.55 }},
+    { name: "Biscuits Prince x12", category: "epicerie", prices: { Carrefour: 2.40, Leclerc: 2.10, Auchan: 2.55, Intermarché: 2.35 }},
+    { name: "Chocolat noir 200g", category: "epicerie", prices: { Carrefour: 3.60, Leclerc: 3.30, Auchan: 3.20, Intermarché: 3.50 }},
+    { name: "Café moulu 250g", category: "epicerie", prices: { Carrefour: 4.80, Leclerc: 4.50, Auchan: 4.40, Intermarché: 4.70 }},
     { name: "Confiture fraise 370g", category: "epicerie", prices: { Carrefour: 2.90, Leclerc: 2.70, Auchan: 3.05, Intermarché: 2.85 }},
-    { name: "Lentilles vertes 500g", category: "epicerie", prices: { Carrefour: 1.95, Leclerc: 1.80, Auchan: 2.05, Intermarché: 1.90 }},
+    { name: "Lentilles vertes 500g", category: "epicerie", prices: { Carrefour: 1.95, Leclerc: 1.80, Auchan: 1.75, Intermarché: 1.90 }},
 
     // ENTRETIEN
-    { name: "Lessive liquide 2L", category: "entretien", prices: { Carrefour: 8.90, Leclerc: 8.45, Auchan: 9.10, Intermarché: 8.70 }},
-    { name: "Liquide vaisselle 750ml", category: "entretien", prices: { Carrefour: 2.10, Leclerc: 1.95, Auchan: 2.25, Intermarché: 2.05 }},
-    { name: "Papier toilette x12", category: "entretien", prices: { Carrefour: 6.90, Leclerc: 6.50, Auchan: 7.10, Intermarché: 6.75 }},
-    { name: "Essuie-tout x6", category: "entretien", prices: { Carrefour: 4.40, Leclerc: 4.10, Auchan: 4.60, Intermarché: 4.25 }},
-    { name: "Nettoyant multi-usage 1L", category: "entretien", prices: { Carrefour: 3.20, Leclerc: 2.95, Auchan: 3.35, Intermarché: 3.10 }},
-    { name: "Tablettes lave-vaisselle x30", category: "entretien", prices: { Carrefour: 9.50, Leclerc: 9.10, Auchan: 9.80, Intermarché: 9.30 }},
-    { name: "Eponge grattante x6", category: "entretien", prices: { Carrefour: 3.10, Leclerc: 2.90, Auchan: 3.25, Intermarché: 3.00 }},
-    { name: "Sac poubelle 30L x20", category: "entretien", prices: { Carrefour: 4.20, Leclerc: 3.95, Auchan: 4.40, Intermarché: 4.05 }},
-    { name: "Gel WC 750ml", category: "entretien", prices: { Carrefour: 2.60, Leclerc: 2.40, Auchan: 2.75, Intermarché: 2.50 }},
-    { name: "Désinfectant spray 500ml", category: "entretien", prices: { Carrefour: 3.90, Leclerc: 3.65, Auchan: 4.10, Intermarché: 3.80 }},
-    { name: "Adoucissant 1.5L", category: "entretien", prices: { Carrefour: 3.40, Leclerc: 3.15, Auchan: 3.55, Intermarché: 3.30 }},
+    { name: "Lessive liquide 2L", category: "entretien", prices: { Carrefour: 8.90, Leclerc: 8.45, Auchan: 8.20, Intermarché: 8.15 }},
+    { name: "Liquide vaisselle 750ml", category: "entretien", prices: { Carrefour: 1.85, Leclerc: 1.95, Auchan: 2.25, Intermarché: 1.90 }},
+    { name: "Papier toilette x12", category: "entretien", prices: { Carrefour: 6.90, Leclerc: 6.50, Auchan: 6.30, Intermarché: 6.75 }},
+    { name: "Essuie-tout x6", category: "entretien", prices: { Carrefour: 4.40, Leclerc: 4.10, Auchan: 4.60, Intermarché: 3.95 }},
+    { name: "Nettoyant multi-usage 1L", category: "entretien", prices: { Carrefour: 3.20, Leclerc: 2.95, Auchan: 2.80, Intermarché: 3.10 }},
 
     // BOISSONS
-    { name: "Coca-Cola 1.5L", category: "boisson", prices: { Carrefour: 1.85, Leclerc: 1.70, Auchan: 1.95, Intermarché: 1.80 }},
-    { name: "Eau Evian 6x1.5L", category: "boisson", prices: { Carrefour: 4.50, Leclerc: 4.20, Auchan: 4.65, Intermarché: 4.35 }},
-    { name: "Jus d'orange 1L", category: "boisson", prices: { Carrefour: 2.50, Leclerc: 2.35, Auchan: 2.60, Intermarché: 2.45 }},
-    { name: "Ice Tea 1.5L", category: "boisson", prices: { Carrefour: 1.95, Leclerc: 1.80, Auchan: 2.05, Intermarché: 1.90 }},
-    { name: "Lait demi-écrémé 1L", category: "boisson", prices: { Carrefour: 1.20, Leclerc: 1.10, Auchan: 1.25, Intermarché: 1.15 }},
-    { name: "Red Bull 250ml", category: "boisson", prices: { Carrefour: 1.70, Leclerc: 1.60, Auchan: 1.80, Intermarché: 1.65 }},
-    { name: "Pepsi 1.5L", category: "boisson", prices: { Carrefour: 1.75, Leclerc: 1.60, Auchan: 1.85, Intermarché: 1.70 }},
-    { name: "Fanta Orange 1.5L", category: "boisson", prices: { Carrefour: 1.85, Leclerc: 1.70, Auchan: 1.95, Intermarché: 1.80 }},
-    { name: "Volvic 6x1.5L", category: "boisson", prices: { Carrefour: 4.30, Leclerc: 4.00, Auchan: 4.50, Intermarché: 4.15 }},
-    { name: "Bière 1664 x6", category: "boisson", prices: { Carrefour: 5.90, Leclerc: 5.60, Auchan: 6.10, Intermarché: 5.75 }},
-    { name: "Sirop grenadine 75cl", category: "boisson", prices: { Carrefour: 3.10, Leclerc: 2.90, Auchan: 3.25, Intermarché: 3.00 }},
+    { name: "Coca-Cola 1.5L", category: "boisson", prices: { Carrefour: 1.65, Leclerc: 1.70, Auchan: 1.80, Intermarché: 1.75 }},
+    { name: "Eau Evian 6x1.5L", category: "boisson", prices: { Carrefour: 4.50, Leclerc: 4.20, Auchan: 4.10, Intermarché: 4.35 }},
+    { name: "Lait demi-écrémé 1L", category: "boisson", prices: { Carrefour: 1.10, Leclerc: 1.15, Auchan: 1.25, Intermarché: 1.05 }},
 
     // FRUITS & LEGUMES
-    { name: "Pommes Golden 1kg", category: "fruit", prices: { Carrefour: 2.40, Leclerc: 2.10, Auchan: 2.55, Intermarché: 2.25 }},
-    { name: "Bananes 1kg", category: "fruit", prices: { Carrefour: 1.90, Leclerc: 1.75, Auchan: 2.00, Intermarché: 1.85 }},
-    { name: "Tomates 1kg", category: "fruit", prices: { Carrefour: 2.80, Leclerc: 2.50, Auchan: 2.95, Intermarché: 2.65 }},
-    { name: "Pommes de terre 2kg", category: "fruit", prices: { Carrefour: 3.40, Leclerc: 3.10, Auchan: 3.60, Intermarché: 3.25 }},
-    { name: "Carottes 1kg", category: "fruit", prices: { Carrefour: 1.90, Leclerc: 1.75, Auchan: 2.00, Intermarché: 1.85 }},
-    { name: "Salade laitue", category: "fruit", prices: { Carrefour: 1.30, Leclerc: 1.20, Auchan: 1.40, Intermarché: 1.25 }},
-    { name: "Oranges 1kg", category: "fruit", prices: { Carrefour: 2.60, Leclerc: 2.35, Auchan: 2.75, Intermarché: 2.50 }},
-    { name: "Courgettes 1kg", category: "fruit", prices: { Carrefour: 2.70, Leclerc: 2.45, Auchan: 2.85, Intermarché: 2.60 }},
-    { name: "Poivrons x3", category: "fruit", prices: { Carrefour: 3.20, Leclerc: 2.95, Auchan: 3.35, Intermarché: 3.10 }},
-    { name: "Kiwi x6", category: "fruit", prices: { Carrefour: 2.50, Leclerc: 2.30, Auchan: 2.65, Intermarché: 2.45 }},
-    { name: "Raisins 1kg", category: "fruit", prices: { Carrefour: 3.60, Leclerc: 3.30, Auchan: 3.80, Intermarché: 3.50 }},
-    { name: "Avocats x2", category: "fruit", prices: { Carrefour: 2.80, Leclerc: 2.55, Auchan: 2.95, Intermarché: 2.70 }}
+    { name: "Pommes Golden 1kg", category: "fruit", prices: { Carrefour: 2.10, Leclerc: 2.20, Auchan: 2.55, Intermarché: 2.25 }},
+    { name: "Bananes 1kg", category: "fruit", prices: { Carrefour: 1.70, Leclerc: 1.75, Auchan: 2.00, Intermarché: 1.85 }},
+    { name: "Tomates 1kg", category: "fruit", prices: { Carrefour: 2.80, Leclerc: 2.50, Auchan: 2.40, Intermarché: 2.65 }}
 ];
 
-
-// ================= AFFICHAGE PRODUITS =================
 
 function filterCategory(category) {
     displayProducts(category);
@@ -143,168 +116,98 @@ function displayProducts(filteredCategory = "all") {
     products.forEach((product, index) => {
         if (filteredCategory === "all" || product.category === filteredCategory) {
             const div = document.createElement("div");
-            div.className = "product";
+            div.className = "product-card";
 
-            const minPrice = Math.min(...Object.values(product.prices));
-            let priceOptions = "";
-
-            for (let store in product.prices) {
-                const price = product.prices[store];
-                const isCheapest = price === minPrice;
-                priceOptions += `
-                    <label style="color:${isCheapest ? 'green' : 'black'}">
-                        <input type="radio" name="store-${index}" value="${store}">
-                        ${store} - ${price} € ${isCheapest ? "✔" : ""}
-                    </label><br>
-                `;
-            }
+            const pricesArr = Object.values(product.prices);
+            const minPrice = Math.min(...pricesArr);
+            const maxPrice = Math.max(...pricesArr);
 
             div.innerHTML = `
-                <strong>${product.name}</strong><br>
-                ${priceOptions}
-                <button onclick="addToCart(${index})">Ajouter au panier</button>
+                <strong>${product.name}</strong>
+                <small>Prix de ${minPrice.toFixed(2)}€ à ${maxPrice.toFixed(2)}€</small>
+                <button onclick="addToCart(${index})">🛒 Ajouter</button>
             `;
             productList.appendChild(div);
         }
     });
 }
 
-// ================= GESTION PANIER =================
-
-function addToCart(index) {
-    const selectedStore = document.querySelector(`input[name="store-${index}"]:checked`);
-    if (!selectedStore) {
-        alert("Veuillez sélectionner un magasin pour ce produit.");
-        return;
-    }
-
-    const product = products[index];
-    const store = selectedStore.value;
-    const price = product.prices[store];
-
-    cart.push({ name: product.name, store, price });
-    cartIndices.push(index); // On garde l'index pour la comparaison serveur
-    updateCart();
+// organisation du panier 
+function addToCart(productIndex) {
+    const product = products[productIndex];
+    cart.push(product);
+    updateCartDisplay();
 }
 
 function removeFromCart(index) {
     cart.splice(index, 1);
-    cartIndices.splice(index, 1);
-    updateCart();
+    updateCartDisplay();
+    document.getElementById("comparisonResults").style.display = "none";
 }
 
-function updateCart() {
-    const cartItems = document.getElementById("cartItems");
-    const totalPrice = document.getElementById("totalPrice");
+function updateCartDisplay() {
+    const cartItemsDiv = document.getElementById("cartItems");
     const cartCount = document.getElementById("cartCount");
+    cartItemsDiv.innerHTML = "";
 
-    cartItems.innerHTML = "";
-    let total = 0;
-
-    cart.forEach((item, index) => {
-        total += item.price;
-        cartItems.innerHTML += `
-            <div class="cart-item">
-                ${item.name} (${item.store}) - ${item.price} €
-                <button onclick="removeFromCart(${index})">X</button>
-            </div>
-        `;
-    });
-
-    totalPrice.textContent = total.toFixed(2);
+    if (cart.length === 0) {
+        cartItemsDiv.innerHTML = "<p>Le panier est vide.</p>";
+    } else {
+        cart.forEach((item, index) => {
+            const itemDiv = document.createElement("div");
+            itemDiv.className = "cart-item";
+            itemDiv.innerHTML = `
+                <span>${item.name}</span>
+                <button onclick="removeFromCart(${index})">✕</button>
+            `;
+            cartItemsDiv.appendChild(itemDiv);
+        });
+    }
     cartCount.textContent = cart.length;
 }
 
 function showCart() {
-    document.querySelector(".cart").style.display = "block";
-    window.scrollTo(0, document.body.scrollHeight);
+    document.querySelector(".cart").scrollIntoView({ behavior: 'smooth' });
 }
 
-#Bouton comparaison
-
-// Mise à jour visuelle du panier
-function updateCart() {
-    const cartItems = document.getElementById("cartItems");
-    const cartCount = document.getElementById("cartCount");
-    const cartTotalItems = document.getElementById("cartTotalItems");
-
-    cartItems.innerHTML = "";
-
-    cart.forEach((item, index) => {
-        cartItems.innerHTML += `
-            <div class="cart-item">
-                ${item.name} 
-                <button onclick="removeFromCart(${index})" style="background: red; padding: 2px 6px; float: right;">X</button>
-            </div>
-        `;
-    });
-
-    cartCount.textContent = cart.length;
-    if(cartTotalItems) cartTotalItems.textContent = cart.length;
-}
-
-// Fonction pour envoyer les données au serveur
-function compareCart() {
-    if (cartIndices.length === 0) {
-        alert("Votre liste de courses est vide !");
+// comparateur des prix
+function comparePrices() {
+    if (cart.length === 0) {
+        alert("Ajoutez des articles à votre panier pour comparer !");
         return;
     }
+    const storeNames = ["Carrefour", "Leclerc", "Auchan", "Intermarché"];
+    let totals = { Carrefour: 0, Leclerc: 0, Auchan: 0, Intermarché: 0 };
 
-    // Appel à ton API locale Node.js
-    fetch('http://localhost:3000/compare-prices', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ productIndices: cartIndices })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.error) {
-            alert(data.error);
-            return;
-        }
-        showComparisonResult(data);
-    })
-    .catch(error => {
-        console.error('Erreur de connexion au serveur:', error);
-        alert("Impossible de joindre le serveur. Pensez à lancer server.js !");
+    // Calcul du cumul pour chaque enseigne
+    cart.forEach(item => {
+        storeNames.forEach(store => {
+            totals[store] += item.prices[store];
+        });
     });
-}
 
-// Affichage de la modale avec les résultats
-function showComparisonResult(data) {
-    const modal = document.getElementById("comparisonModal");
-    const resultsText = document.getElementById("comparisonResultsText");
-    
-    let html = `
-        <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; border-left: 5px solid #4caf50; margin-bottom: 20px;">
-            <p style="font-size: 18px; margin: 0;">🏆 <strong>${data.bestStore}</strong></p>
-            <p style="font-size: 24px; font-weight: bold; color: #2e7d32; margin: 5px 0 0 0;">${data.total} €</p>
-        </div>
-        <h4 style="margin-bottom: 10px;">Détails par enseigne :</h4>
-        <ul style="list-style-type: none; padding: 0;">
-    `;
-    
-    // Trier les magasins du moins cher au plus cher
-    const sortedStores = Object.entries(data.allTotals).sort((a, b) => a[1] - b[1]);
+    // Transformation en tableau pour trier les résultats
+    const sortedResults = Object.keys(totals)
+        .map(store => ({ name: store, total: totals[store] }))
+        .sort((a, b) => a.total - b.total);
 
-    sortedStores.forEach(([store, price]) => {
-        const isBest = store === data.bestStore;
-        html += `
-            <li style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; ${isBest ? 'font-weight: bold; color: green;' : ''}">
-                <span>${store}</span>
-                <span>${price.toFixed(2)} €</span>
-            </li>
-        `;
+    // Affichage des résultats
+    const resultsSection = document.getElementById("comparisonResults");
+    const rankingsDiv = document.getElementById("storeRankings");
+    const bestMsg = document.getElementById("bestStoreMessage");
+
+    rankingsDiv.innerHTML = "";
+    sortedResults.forEach((result, index) => {
+        const row = document.createElement("p");
+        row.style.padding = "10px";
+        row.style.background = index === 0 ? "#eaffea" : "#f9f9f9";
+        row.style.borderRadius = "8px";
+        row.style.margin = "5px 0";
+        row.innerHTML = `<strong>${index + 1}. ${result.name}</strong> : ${result.total.toFixed(2)} €`;
+        rankingsDiv.appendChild(row);
     });
-    
-    html += `</ul>`;
-    
-    resultsText.innerHTML = html;
-    modal.style.display = "flex";
-}
 
-function closeComparisonModal() {
-    document.getElementById("comparisonModal").style.display = "none";
+    bestMsg.innerHTML = `🏆 C'est chez <strong>${sortedResults[0].name}</strong> que vous économisez le plus (${sortedResults[0].total.toFixed(2)} €) !`;
+    resultsSection.style.display = "block";
+    resultsSection.scrollIntoView({ behavior: 'smooth' });
 }
